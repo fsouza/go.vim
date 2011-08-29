@@ -5,7 +5,7 @@
 " godoc.vim: Vim command to see godoc.
 
 if exists("g:loaded_godoc")
-    finish
+  finish
 endif
 let g:loaded_godoc = 1
 
@@ -13,70 +13,70 @@ let s:buf_nr = -1
 let s:last_word = ''
 
 function! s:GodocView()
-    if !bufexists(s:buf_nr)
-        leftabove new
-        file `="[Godoc]"`
-        let s:buf_nr = bufnr('%')
-    elseif bufwinnr(s:buf_nr) == -1
-        leftabove split
-        execute s:buf_nr . 'buffer'
-        delete _
-    elseif bufwinnr(s:buf_nr) != bufwinnr('%')
-        execute bufwinnr(s:buf_nr) . 'wincmd w'
-    endif
+  if !bufexists(s:buf_nr)
+    leftabove new
+    file `="[Godoc]"`
+    let s:buf_nr = bufnr('%')
+  elseif bufwinnr(s:buf_nr) == -1
+    leftabove split
+    execute s:buf_nr . 'buffer'
+    delete _
+  elseif bufwinnr(s:buf_nr) != bufwinnr('%')
+    execute bufwinnr(s:buf_nr) . 'wincmd w'
+  endif
 
-    setlocal filetype=godoc
-    setlocal bufhidden=delete
-    setlocal buftype=nofile
-    setlocal noswapfile
-    setlocal nobuflisted
-    setlocal modifiable
-    setlocal nocursorline
-    setlocal nocursorcolumn
-    setlocal iskeyword+=:
-    setlocal iskeyword-=-
+  setlocal filetype=godoc
+  setlocal bufhidden=delete
+  setlocal buftype=nofile
+  setlocal noswapfile
+  setlocal nobuflisted
+  setlocal modifiable
+  setlocal nocursorline
+  setlocal nocursorcolumn
+  setlocal iskeyword+=:
+  setlocal iskeyword-=-
 
-    nnoremap <buffer> <silent> K :Godoc<cr>
+  nnoremap <buffer> <silent> K :Godoc<cr>
 
-    au BufHidden <buffer> call let <SID>buf_nr = -1
+  au BufHidden <buffer> call let <SID>buf_nr = -1
 endfunction
 
 function! s:GodocWord(word)
-    let word = a:word
-    silent! let content = system('godoc ' . word)
-    if v:shell_error || !len(content)
-        if len(s:last_word)
-            silent! let content = system('godoc ' . s:last_word.'/'.word)
-            if v:shell_error || !len(content)
-                echo 'No documentation found for "' . word . '".'
-                return
-            endif
-            let word = s:last_word.'/'.word
-        else
-            echo 'No documentation found for "' . word . '".'
-            return
-        endif
+  let word = a:word
+  silent! let content = system('godoc ' . word)
+  if v:shell_error || !len(content)
+    if len(s:last_word)
+      silent! let content = system('godoc ' . s:last_word.'/'.word)
+      if v:shell_error || !len(content)
+        echo 'No documentation found for "' . word . '".'
+        return
+      endif
+      let word = s:last_word.'/'.word
+    else
+      echo 'No documentation found for "' . word . '".'
+      return
     endif
-    let s:last_word = word
-    silent! call s:GodocView()
-    setlocal modifiable
-    silent! %d _
-    silent! put! =content
-    silent! normal gg
-    setlocal nomodifiable
-    setfiletype godoc
+  endif
+  let s:last_word = word
+  silent! call s:GodocView()
+  setlocal modifiable
+  silent! %d _
+  silent! put! =content
+  silent! normal gg
+  setlocal nomodifiable
+  setfiletype godoc
 endfunction
 
 function! s:Godoc(...)
-    let word = join(a:000, ' ')
-    if !len(word)
-        let word = expand('<cword>')
-    endif
-    let word = substitute(word, '[^a-zA-Z0-9\/]', '', 'g')
-    if !len(word)
-        return
-    endif
-    call s:GodocWord(word)
+  let word = join(a:000, ' ')
+  if !len(word)
+    let word = expand('<cword>')
+  endif
+  let word = substitute(word, '[^a-zA-Z0-9\/]', '', 'g')
+  if !len(word)
+    return
+  endif
+  call s:GodocWord(word)
 endfunction
 
 command! -nargs=* -range -complete=customlist,go#complete#Package Godoc :call s:Godoc(<q-args>)

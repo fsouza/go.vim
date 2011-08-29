@@ -1,62 +1,64 @@
-" Vim indent file
-" Language:	Go
-" Author:	Alecs King <alecsk@gmail.com>
+" Copyright 2011 The Go Authors. All rights reserved.
+" Use of this source code is governed by a BSD-style
+" license that can be found in the LICENSE file.
 "
-" inspired by indent/lua.vim
+" indent/go.vim: Vim indent file for Go.
 "
-" very simple:
-" just indent common cases to avoid manually typing tab or backspace
-"
-" for better style, please use gofmt after done editing.
-"
-" since it just simply uses regex matches,
-" there might be some mis-indented corner cases.
-" 
+" TODO:
+" - function invocations split across lines
+" - general line splits (line ends in an operator)
 
-" Only load this indent file when no other was loaded.
 if exists("b:did_indent")
-  finish
+    finish
 endif
 let b:did_indent = 1
 
-setlocal indentexpr=GetGoIndent()
-
-" To make Vim call GetLuaIndent() when it finds '\s*)', '\s*}', '\s*case', '\s*default'
-setlocal indentkeys+=0=),0=},0=case,0=default
-
+" C indentation is too far off useful, mainly due to Go's := operator.
+" Let's just define our own.
+setlocal nolisp
 setlocal autoindent
+setlocal indentexpr=GoIndent(v:lnum)
+setlocal indentkeys+=<:>,0=},0=)
 
-" Only define the function once.
-if exists("*GetGoIndent")
+if exists("*GoIndent")
   finish
 endif
 
-function! GetGoIndent()
-  " Find a non-blank line above the current line.
-  let prevlnum = prevnonblank(v:lnum - 1)
-
-  " Hit the start of the file, use zero indent.
+function! GoIndent(lnum)
+  let prevlnum = prevnonblank(a:lnum-1)
   if prevlnum == 0
+    " top of file
     return 0
   endif
 
-  " Add a 'shiftwidth' after lines that start a block:
-  " 'case', 'default', '{', '('
-  let ind = indent(prevlnum)
-  let prevline = getline(prevlnum)
-  let midx = match(prevline, '^\s*\%(case\>\|default\>\)')
-  if midx == -1
-    let midx = match(prevline, '[({]\s*$')
+  " grab the previous and current line, stripping comments.
+  let prevl = substitute(getline(prevlnum), '//.*$', '', '')
+  let thisl = substitute(getline(a:lnum), '//.*$', '', '')
+  let previ = indent(prevlnum)
+
+  let ind = previ
+
+  if prevl =~ '[({]\s*$'
+    " previous line opened a block
+    let ind += &sw
   endif
-  if midx != -1
-    let ind = ind + &shiftwidth
+  if prevl =~# '^\s*\(case .*\|default\):$'
+    " previous line is part of a switch statement
+    let ind += &sw
+  endif
+  " TODO: handle if the previous line is a label.
+
+  if thisl =~ '^\s*[)}]'
+    " this line closed a block
+    let ind -= &sw
   endif
 
-  " Subtract a 'shiftwidth' on 'case', 'default', '}', ')'.
-  " This is the part that requires 'indentkeys'.
-  let midx = match(getline(v:lnum), '^\s*\%(case\>\|default\>\|[)}]\)')
-  if midx != -1
-    let ind = ind - &shiftwidth
+  " Colons are tricky.
+  " We want to outdent if it's part of a switch ("case foo:" or "default:").
+  " We ignore trying to deal with jump labels because (a) they're rare, and
+  " (b) they're hard to disambiguate from a composite literal key.
+  if thisl =~# '^\s*\(case .*\|default\):$'
+    let ind -= &sw
   endif
 
   return ind

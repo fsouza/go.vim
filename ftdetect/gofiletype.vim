@@ -6,5 +6,8 @@ autocmd FileType go setlocal noexpandtab
 "Mapping gorun
 autocmd FileType go map <Leader>g :!gorun %<CR>
 
+"Compiling (using Make)
+autocmd FileType go map <Leader>c :mak<CR>
+
 "Mapping godoc
 autocmd FileType go map <F8> :Godoc<CR>

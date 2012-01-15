@@ -1,4 +1,4 @@
-au BufReadPre,BufNewFile *.go set filetype=go fileencoding=utf-8 fileencodings=utf-8
+au BufEnter *.go set filetype=go fileencoding=utf-8 fileencodings=utf-8
 
 "Set noexpandtab to Go files
 autocmd FileType go setlocal noexpandtab

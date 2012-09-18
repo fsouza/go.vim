@@ -5,3 +5,7 @@ Personal stuff on [Go](http://golang.org) development with Vim (most imported fr
 ##gocomplete
 
 To get gocomplete working, make sure you've installed [gocode](https://github.com/nsf/gocode).
+
+##License
+
+This package has multiple licenses, please refer to the LICENSE file for more details.

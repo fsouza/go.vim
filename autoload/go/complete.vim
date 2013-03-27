@@ -31,24 +31,32 @@ endif
 function! go#complete#Package(ArgLead, CmdLine, CursorPos)
   let dirs = []
 
-  let workspaces = split( $GOPATH, ':' )
+  if executable('go')
+      let goroot = substitute(system('go env GOROOT'), '\n', '', 'g')
+      if v:shell_error
+          echo '\'go env GOROOT\' failed'
+      endif
+  else
+      let goroot = $GOROOT
+  endif
+
+  if len(goroot) != 0 && isdirectory(goroot)
+    let dirs += [ goroot ]
+  endif
+
+  let workspaces = split($GOPATH, ':')
   if workspaces != []
       let dirs += workspaces
   endif
 
-  let goroot = $GOROOT
-  if len(goroot) != 0
-    let dirs += [ goroot ]
-  endif
-
-  if len( dirs ) == 0
+  if len(dirs) == 0
       " should not happen
       return []
   endif
 
   let ret = {}
   for dir in dirs
-    let root = expand(dir.'/pkg/'.s:goos.'_'.s:goarch)
+    let root = expand(dir . '/pkg/' . s:goos . '_' . s:goarch)
     for i in split(globpath(root, a:ArgLead.'*'), "\n")
       if isdirectory(i)
         let i .= '/'

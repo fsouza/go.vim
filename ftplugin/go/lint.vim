@@ -6,6 +6,10 @@ if exists("b:did_ftplugin_go_lint")
     finish
 endif
 
+if !executable("golint")
+    finish
+endif
+
 function! s:GoLint()
     cexpr system("golint " . shellescape(expand('%')))
     copen
